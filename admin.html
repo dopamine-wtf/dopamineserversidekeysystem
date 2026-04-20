@@ -1,1 +1,131 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Key Activation</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #000000;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #00ff00;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #000000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: monospace;
+        }
+        button {
+            background: #00ff00;
+            color: #000000;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #000000;
+            border: 1px solid #00ff00;
+        }
+        .info {
+            background: #001100;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #00ff00;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Manual Key Activation</h1>
+        <div class="info">
+            <strong>Instructions:</strong><br>
+            1. Get User ID from the Roblox script display<br>
+            2. Get HWID from the Discord webhook when user attempts<br>
+            3. Enter key from your list<br>
+            4. Click Activate
+        </div>
+        <input type="password" id="adminPass" placeholder="Admin Password">
+        <input type="text" id="keyInput" placeholder="Key to activate (e.g., DAY_4kD92jsL0aQpZx1M)">
+        <input type="number" id="userId" placeholder="User ID (from Roblox)">
+        <input type="text" id="hwid" placeholder="HWID (from Discord webhook)">
+        <button onclick="activateKey()">Activate Key</button>
+        <div id="result" class="result"></div>
+    </div>
+    
+    <script>
+        async function activateKey() {
+            const adminPass = document.getElementById('adminPass').value;
+            const key = document.getElementById('keyInput').value;
+            const userId = document.getElementById('userId').value;
+            const hwid = document.getElementById('hwid').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!adminPass || !key || !userId || !hwid) {
+                resultDiv.innerHTML = "Fill in all fields";
+                resultDiv.style.color = "#ff0000";
+                return;
+            }
+            
+            if (adminPass !== "$xen$4295") {
+                resultDiv.innerHTML = "Invalid admin password";
+                resultDiv.style.color = "#ff0000";
+                return;
+            }
+            
+            resultDiv.innerHTML = "Processing...";
+            resultDiv.style.color = "#ffff00";
+            
+            try {
+                const response = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        key: key, 
+                        userId: parseInt(userId), 
+                        hwid: hwid, 
+                        adminPassword: adminPass 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = "Success: " + data.message;
+                    resultDiv.style.color = "#00ff00";
+                    document.getElementById('keyInput').value = '';
+                    document.getElementById('userId').value = '';
+                    document.getElementById('hwid').value = '';
+                } else {
+                    resultDiv.innerHTML = "Failed: " + data.message;
+                    resultDiv.style.color = "#ff0000";
+                }
+            } catch (error) {
+                resultDiv.innerHTML = "Error: " + error.message;
+                resultDiv.style.color = "#ff0000";
+            }
+        }
+    </script>
+</body>
+</html>
