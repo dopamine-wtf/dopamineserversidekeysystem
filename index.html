@@ -1,679 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Xen Key Manager</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #080b10;
-      --surface: #0d1117;
-      --surface2: #161b22;
-      --border: #21262d;
-      --accent: #00d4ff;
-      --accent2: #7c3aed;
-      --green: #39d353;
-      --red: #f85149;
-      --yellow: #e3b341;
-      --orange: #f0883e;
-      --purple: #bc8cff;
-      --text: #e6edf3;
-      --muted: #7d8590;
-      --mono: 'Share Tech Mono', monospace;
-      --sans: 'Rajdhani', sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* GRID BG */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ─── LOGIN SCREEN ─── */
-    #loginScreen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      background: var(--bg);
-    }
-
-    .login-wrap {
-      position: relative;
-      width: 420px;
-    }
-
-    .login-glow {
-      position: absolute;
-      inset: -60px;
-      background: radial-gradient(ellipse at center, rgba(0,212,255,0.08) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .login-box {
-      position: relative;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 44px 40px;
-      text-align: center;
-      box-shadow: 0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
-    }
-
-    .login-box::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 20%; right: 20%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    }
-
-    .login-logo {
-      font-family: var(--mono);
-      font-size: 36px;
-      letter-spacing: 6px;
-      color: var(--accent);
-      text-shadow: 0 0 20px rgba(0,212,255,0.5);
-      margin-bottom: 6px;
-    }
-
-    .login-sub {
-      font-size: 13px;
-      color: var(--muted);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 36px;
-    }
-
-    .login-label {
-      display: block;
-      text-align: left;
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    .login-input {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 15px;
-      letter-spacing: 2px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      margin-bottom: 20px;
-    }
-
-    .login-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
-    }
-
-    .login-btn {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15));
-      border: 1px solid var(--accent);
-      border-radius: 6px;
-      color: var(--accent);
-      font-family: var(--sans);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .login-btn:hover {
-      background: linear-gradient(135deg, rgba(0,212,255,0.25), rgba(124,58,237,0.25));
-      box-shadow: 0 0 20px rgba(0,212,255,0.2);
-    }
-
-    .login-err {
-      margin-top: 16px;
-      color: var(--red);
-      font-size: 13px;
-      letter-spacing: 1px;
-      min-height: 20px;
-      animation: shake 0.3s ease;
-    }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      25% { transform: translateX(-8px); }
-      75% { transform: translateX(8px); }
-    }
-
-    /* ─── DASHBOARD ─── */
-    #dashboard {
-      display: none;
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 32px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-
-    .topbar-logo {
-      font-family: var(--mono);
-      font-size: 20px;
-      letter-spacing: 4px;
-      color: var(--accent);
-      text-shadow: 0 0 12px rgba(0,212,255,0.4);
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .live-dot {
-      width: 7px; height: 7px;
-      background: var(--green);
-      border-radius: 50%;
-      box-shadow: 0 0 6px var(--green);
-      animation: pulse 2s infinite;
-      display: inline-block;
-      margin-right: 6px;
-    }
-
-    @keyframes pulse {
-      0%,100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    .main {
-      padding: 28px 32px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    /* ─── STATS ROW ─── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 18px;
-      text-align: center;
-    }
-
-    .stat-card .num {
-      font-family: var(--mono);
-      font-size: 28px;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    .stat-card .lbl {
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-
-    /* ─── FILTERS ─── */
-    .filter-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-      align-items: center;
-    }
-
-    .filter-btn {
-      padding: 7px 16px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-family: var(--sans);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .filter-btn:hover, .filter-btn.active {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: rgba(0,212,255,0.08);
-    }
-
-    .search-input {
-      margin-left: auto;
-      padding: 7px 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 13px;
-      outline: none;
-      width: 260px;
-      transition: border-color 0.2s;
-    }
-
-    .search-input:focus { border-color: var(--accent); }
-
-    /* ─── TABLE ─── */
-    .table-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    thead tr {
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      padding: 13px 16px;
-      text-align: left;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      background: rgba(255,255,255,0.02);
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 11px 16px;
-      font-size: 13px;
-      border-bottom: 1px solid rgba(33,38,45,0.5);
-      vertical-align: middle;
-    }
-
-    tr:last-child td { border-bottom: none; }
-
-    tr:hover td { background: rgba(255,255,255,0.02); }
-
-    .key-code {
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--text);
-      letter-spacing: 0.5px;
-    }
-
-    /* ─── BADGES ─── */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .badge-active    { background: rgba(57,211,83,0.12);  color: var(--green);  border: 1px solid rgba(57,211,83,0.3); }
-    .badge-expired   { background: rgba(248,81,73,0.12);  color: var(--red);    border: 1px solid rgba(248,81,73,0.3); }
-    .badge-disabled  { background: rgba(125,133,144,0.12);color: var(--muted);  border: 1px solid rgba(125,133,144,0.3); }
-    .badge-locked    { background: rgba(240,136,62,0.12); color: var(--orange); border: 1px solid rgba(240,136,62,0.3); }
-    .badge-unlocked  { background: rgba(57,211,83,0.08);  color: #39d353aa;     border: 1px solid rgba(57,211,83,0.2); }
-    .badge-unused    { background: rgba(0,212,255,0.08);  color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
-
-    .type-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .type-DAY      { background: rgba(0,212,255,0.1);  color: #00d4ff; }
-    .type-3DAY     { background: rgba(0,212,255,0.14); color: #00d4ff; }
-    .type-WEEK     { background: rgba(124,58,237,0.15);color: #a78bfa; }
-    .type-MONTH    { background: rgba(124,58,237,0.2); color: #bc8cff; }
-    .type-3MONTH   { background: rgba(124,58,237,0.25);color: #d8b4fe; }
-    .type-YEAR     { background: rgba(227,179,65,0.15);color: #e3b341; }
-    .type-LIFETIME { background: rgba(57,211,83,0.15); color: #39d353; }
-    .type-DEV      { background: rgba(248,81,73,0.15); color: #f85149; }
-    .type-TRIAL    { background: rgba(125,133,144,0.15);color: #7d8590; }
-    .type-MEDIA    { background: rgba(240,136,62,0.15);color: #f0883e; }
-
-    .hwid-text {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--orange);
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .time-left {
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--text);
-    }
-
-    .time-left.soon { color: var(--yellow); }
-    .time-left.expired { color: var(--red); }
-    .time-left.forever { color: var(--green); }
-
-    .row-count {
-      padding: 12px 16px;
-      font-size: 12px;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
-      letter-spacing: 1px;
-    }
-
-    .no-results {
-      text-align: center;
-      padding: 50px;
-      color: var(--muted);
-      font-size: 14px;
-      letter-spacing: 1px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key System Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+            color: #00ff00;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .login-box, .dashboard {
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 50px;
+            box-shadow: 0 0 20px rgba(0,255,0,0.3);
+        }
+        h1 { text-align: center; margin-bottom: 30px; text-shadow: 0 0 10px #00ff00; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover { background: #00cc00; }
+        .key-card {
+            background: #000;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .key-header {
+            font-weight: bold;
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .key-detail { margin: 5px 0; font-size: 14px; }
+        .warning { color: #ff0000; }
+        .success { color: #00ff00; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background: #000;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            text-align: center;
+        }
+        .error { color: #ff0000; text-align: center; margin-top: 10px; }
+    </style>
 </head>
 <body>
+    <div class="container" id="app"></div>
 
-<!-- ─── LOGIN ─── -->
-<div id="loginScreen">
-  <div class="login-wrap">
-    <div class="login-glow"></div>
-    <div class="login-box">
-      <div class="login-logo">XEN</div>
-      <div class="login-sub">Key Manager · Admin</div>
-      <label class="login-label" for="passInput">Admin Password</label>
-      <input type="password" class="login-input" id="passInput"
-        placeholder="••••••••••" autocomplete="off"
-        onkeydown="if(event.key==='Enter')login()">
-      <button class="login-btn" onclick="login()">Authenticate</button>
-      <div class="login-err" id="loginErr"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ─── DASHBOARD ─── -->
-<div id="dashboard">
-  <div class="topbar">
-    <div class="topbar-logo">XEN</div>
-    <div class="topbar-right">
-      <span><span class="live-dot"></span>Live</span>
-      <span id="clockDisplay"></span>
-    </div>
-  </div>
-
-  <div class="main">
-    <!-- Stats -->
-    <div class="stats-row" id="statsRow"></div>
-
-    <!-- Filters & Search -->
-    <div class="filter-row" id="filterRow">
-      <button class="filter-btn active" onclick="setFilter('ALL', this)">All</button>
-      <button class="filter-btn" onclick="setFilter('DAY', this)">Day</button>
-      <button class="filter-btn" onclick="setFilter('3DAY', this)">3 Day</button>
-      <button class="filter-btn" onclick="setFilter('WEEK', this)">Week</button>
-      <button class="filter-btn" onclick="setFilter('MONTH', this)">Month</button>
-      <button class="filter-btn" onclick="setFilter('3MONTH', this)">3 Month</button>
-      <button class="filter-btn" onclick="setFilter('YEAR', this)">Year</button>
-      <button class="filter-btn" onclick="setFilter('LIFETIME', this)">Lifetime</button>
-      <button class="filter-btn" onclick="setFilter('DEV', this)">Dev</button>
-      <button class="filter-btn" onclick="setFilter('TRIAL', this)">Trial</button>
-      <button class="filter-btn" onclick="setFilter('MEDIA', this)">Media</button>
-      <input type="text" class="search-input" id="searchInput"
-        placeholder="Search keys or HWID..."
-        oninput="renderTable()">
-    </div>
-
-    <!-- Table -->
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Key</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>HWID Lock</th>
-            <th>Locked To</th>
-            <th>Expires</th>
-            <th>Time Left</th>
-          </tr>
-        </thead>
-        <tbody id="keyBody"></tbody>
-      </table>
-      <div class="row-count" id="rowCount"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-  const PASS = '$xen$4295';
-  let allKeys = [];
-  let activeFilter = 'ALL';
-
-  // ── Clock ──
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('clockDisplay').textContent =
-      now.toUTCString().replace('GMT', 'UTC');
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  // ── Login ──
-  function login() {
-    const val = document.getElementById('passInput').value;
-    if (val === PASS) {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      loadKeys();
-    } else {
-      const err = document.getElementById('loginErr');
-      err.textContent = '✗ Incorrect password. Access denied.';
-      err.style.animation = 'none';
-      void err.offsetWidth;
-      err.style.animation = 'shake 0.3s ease';
-      document.getElementById('passInput').value = '';
-      document.getElementById('passInput').focus();
-    }
-  }
-
-  // ── Load keys ──
-  async function loadKeys() {
-    try {
-      const res = await fetch('/keys.json');
-      const data = await res.json();
-      allKeys = data.keys;
-      renderStats();
-      renderTable();
-    } catch (e) {
-      document.getElementById('keyBody').innerHTML =
-        `<tr><td colspan="8" class="no-results">⚠ Failed to load keys.json</td></tr>`;
-    }
-  }
-
-  // ── Stats ──
-  function renderStats() {
-    const now = new Date();
-    const total = allKeys.length;
-    const activated = allKeys.filter(k => k.activated).length;
-    const unused = allKeys.filter(k => !k.activated).length;
-    const hwidLocked = allKeys.filter(k => k.hwid).length;
-    const expired = allKeys.filter(k => {
-      if (!k.expiry) return false;
-      return new Date(k.expiry) < now;
-    }).length;
-    const lifetime = allKeys.filter(k => k.type === 'LIFETIME').length;
-
-    const stats = [
-      { num: total, lbl: 'Total Keys' },
-      { num: activated, lbl: 'Activated' },
-      { num: unused, lbl: 'Unused' },
-      { num: hwidLocked, lbl: 'HWID Locked' },
-      { num: expired, lbl: 'Expired' },
-      { num: lifetime, lbl: 'Lifetime' },
-    ];
-
-    document.getElementById('statsRow').innerHTML = stats.map(s => `
-      <div class="stat-card">
-        <div class="num">${s.num}</div>
-        <div class="lbl">${s.lbl}</div>
-      </div>
-    `).join('');
-  }
-
-  // ── Filter ──
-  function setFilter(f, btn) {
-    activeFilter = f;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderTable();
-  }
-
-  // ── Time left ──
-  function timeLeft(key) {
-    if (key.type === 'LIFETIME' || key.type === 'DEV' || key.type === 'MEDIA') {
-      return { text: '∞ Forever', cls: 'forever' };
-    }
-    if (!key.expiry) {
-      return { text: 'Not activated', cls: '' };
-    }
-    const now = new Date();
-    const exp = new Date(key.expiry);
-    const ms = exp - now;
-    if (ms <= 0) return { text: 'Expired', cls: 'expired' };
-    const d = Math.floor(ms / 86400000);
-    const h = Math.floor((ms % 86400000) / 3600000);
-    const m = Math.floor((ms % 3600000) / 60000);
-    const cls = d < 1 ? 'soon' : '';
-    const text = d > 0 ? `${d}d ${h}h` : `${h}h ${m}m`;
-    return { text, cls };
-  }
-
-  // ── Render table ──
-  function renderTable() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const now = new Date();
-
-    let filtered = allKeys.filter(k => {
-      if (activeFilter !== 'ALL' && k.type !== activeFilter) return false;
-      if (search && !k.key.toLowerCase().includes(search) &&
-          !k.hwid.toLowerCase().includes(search)) return false;
-      return true;
-    });
-
-    const tbody = document.getElementById('keyBody');
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="no-results">No keys match filter</td></tr>`;
-      document.getElementById('rowCount').textContent = '0 keys';
-      return;
-    }
-
-    tbody.innerHTML = filtered.map((k, i) => {
-      // Status badge
-      let statusBadge;
-      if (!k.active) {
-        statusBadge = `<span class="badge badge-disabled">⊘ Disabled</span>`;
-      } else if (k.expiry && new Date(k.expiry) < now && k.type !== 'LIFETIME' && k.type !== 'DEV' && k.type !== 'MEDIA') {
-        statusBadge = `<span class="badge badge-expired">✗ Expired</span>`;
-      } else if (!k.activated) {
-        statusBadge = `<span class="badge badge-unused">◈ Unused</span>`;
-      } else {
-        statusBadge = `<span class="badge badge-active">✓ Active</span>`;
-      }
-
-      // HWID badge
-      const hwidBadge = k.hwid
-        ? `<span class="badge badge-locked">🔒 Locked</span>`
-        : `<span class="badge badge-unlocked">○ Free</span>`;
-
-      // HWID value
-      const hwidVal = k.hwid
-        ? `<span class="hwid-text" title="${k.hwid}">${k.hwid}</span>`
-        : `<span style="color:var(--muted);font-size:12px;">—</span>`;
-
-      // Expiry
-      const expiryStr = k.expiry
-        ? new Date(k.expiry).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
-        : (k.type === 'LIFETIME' || k.type === 'DEV' || k.type === 'MEDIA' ? '∞' : '—');
-
-      // Time left
-      const tl = timeLeft(k);
-
-      return `
-        <tr>
-          <td style="color:var(--muted);font-family:var(--mono);font-size:11px;">${i+1}</td>
-          <td><span class="key-code">${k.key}</span></td>
-          <td><span class="type-badge type-${k.type}">${k.type}</span></td>
-          <td>${statusBadge}</td>
-          <td>${hwidBadge}</td>
-          <td>${hwidVal}</td>
-          <td style="font-family:var(--mono);font-size:12px;color:var(--muted);">${expiryStr}</td>
-          <td><span class="time-left ${tl.cls}">${tl.text}</span></td>
-        </tr>`;
-    }).join('');
-
-    document.getElementById('rowCount').textContent =
-      `Showing ${filtered.length} of ${allKeys.length} keys`;
-  }
-</script>
+    <script>
+        // Password protection
+        const REQUIRED_PASSWORD = "$xen$4295";
+        
+        // Key database (in production, this would be a backend)
+        let keyDatabase = {};
+        
+        // Initialize keys from the provided list
+        function initializeKeys() {
+            const dayKeys = [
+                "DAY_4kD92jsL0aQpZx1M", "DAY_a8Fj2L0qWmZxP9sT", "DAY_Zx91LmQa2P0kFsD3",
+                "DAY_2kLmP0sQ9ZxFj8Ta", "DAY_sD8F2LmQ0ZxPa9k1", "DAY_0ZxPqLmF2a9sD8kJ",
+                "DAY_kLm2ZxP9sD0FqA8J", "DAY_9sD2LmF0ZxPkQ8Ja", "DAY_F2LmZx0P9kQsD8Aj",
+                "DAY_LmZxP0F2k9sDQa8J", "DAY_Q2ZxLmP9F0sD8kAj", "DAY_8LmF2ZxQ0P9sDkAj",
+                "DAY_0PZx2LmFQ9sDkA8J", "DAY_kAj8ZxP2LmF0QsD9", "DAY_2LmFZxQ0kP9sD8Aj",
+                "DAY_FZx2LmP0k9QsD8Aj", "DAY_9ZxF2LmQ0kP8sDAj", "DAY_LmFZx0kP2Q9sD8Aj",
+                "DAY_ZxLmF2Q0kP9sD8Aj", "DAY_2ZxLmF0kP9QsD8Aj", "DAY_F0ZxLm2kP9QsD8Aj",
+                "DAY_kP2ZxLmF0Q9sD8Aj", "DAY_8AjZx2LmF0kP9QsD", "DAY_0kZxLmF2P9QsD8Aj",
+                "DAY_LmF2ZxkP0Q9sD8Aj", "DAY_2kZxLmF0P9QsD8Aj", "DAY_F2ZxLm0kP9QsD8Aj",
+                "DAY_ZxLmF2kP0Q9sD8Aj", "DAY_0ZxLmF2kP9QsD8Aj", "DAY_LmF2Zx0kP9QsD8Aj",
+                "DAY_ZxLmF0kP2QsD9A8j", "DAY_2LmZxF0kP9QsD8Aj", "DAY_8AjZxLmF2kP0QsD9",
+                "DAY_kP2ZxLmF0QsD9A8j", "DAY_LmF2Zx0kP9QsD8Aj", "DAY_ZxLmF2kP0QsD9A8j"
+            ];
+            
+            const threeDayKeys = [
+                "3DAY_2kLmP0sQ9ZxFj8Ta", "3DAY_Zx91LmQa2P0kFsD3", "3DAY_a8Fj2L0qWmZxP9sT",
+                "3DAY_4kD92jsL0aQpZx1M", "3DAY_sD8F2LmQ0ZxPa9k1", "3DAY_kLm2ZxP9sD0FqA8J"
+            ];
+            
+            const weekKeys = [
+                "WEEK_4kD92jsL0aQpZx1M", "WEEK_a8Fj2L0qWmZxP9sT", "WEEK_Zx91LmQa2P0kFsD3",
+                "WEEK_2kLmP0sQ9ZxFj8Ta", "WEEK_sD8F2LmQ0ZxPa9k1", "WEEK_kLm2ZxP9sD0FqA8J"
+            ];
+            
+            const monthKeys = [
+                "MONTH_4kD92jsL0aQpZx1M", "MONTH_a8Fj2L0qWmZxP9sT", "MONTH_Zx91LmQa2P0kFsD3",
+                "MONTH_2kLmP0sQ9ZxFj8Ta", "MONTH_sD8F2LmQ0ZxPa9k1", "MONTH_kLm2ZxP9sD0FqA8J"
+            ];
+            
+            const threeMonthKeys = [
+                "3MONTH_4kD92jsL0aQpZx1M", "3MONTH_a8Fj2L0qWmZxP9sT", "3MONTH_Zx91LmQa2P0kFsD3",
+                "3MONTH_2kLmP0sQ9ZxFj8Ta", "3MONTH_sD8F2LmQ0ZxPa9k1", "3MONTH_kLm2ZxP9sD0FqA8J"
+            ];
+            
+            const yearKeys = [
+                "YEAR_4kD92jsL0aQpZx1M", "YEAR_a8Fj2L0qWmZxP9sT", "YEAR_Zx91LmQa2P0kFsD3",
+                "YEAR_2kLmP0sQ9ZxFj8Ta", "YEAR_sD8F2LmQ0ZxPa9k1"
+            ];
+            
+            const lifetimeKeys = [
+                "LIFETIME_4kD92jsL0aQpZx1M", "LIFETIME_a8Fj2L0qWmZxP9sT", "LIFETIME_Zx91LmQa2P0kFsD3",
+                "LIFETIME_2kLmP0sQ9ZxFj8Ta", "LIFETIME_sD8F2LmQ0ZxPa9k1", "LIFETIME_kLm2ZxP9sD0FqA8J"
+            ];
+            
+            const devKeys = [
+                "DEV_x9K2LmQ7aP3zT8vR", "DEV_bF6rN1XqW4mZ8sJ2", "DEV_T7pL2cV9dK5xQ1nA",
+                "DEV_H3sY8mR6Zq2Pj4XK", "DEV_U9dQ1aW7cF5Lx2Vz"
+            ];
+            
+            const trialKeys = [
+                "TRIAL_4kD92jsL0aQpZx1M", "TRIAL_8LmQ2sVx7A1kZpR3", "TRIAL_W9cX5mT2aQ7LpK1Z"
+            ];
+            
+            const mediaKeys = [
+                "MEDIA_P7xQ2L9Z1mA5V3K8", "MEDIA_A2Z9L7Q5X1mP3V8K", "MEDIA_X5Q1Z9L2mA7P3V8K"
+            ];
+            
+            // Combine all keys
+            const allKeys = [...dayKeys, ...threeDayKeys, ...weekKeys, ...monthKeys, 
+                           ...threeMonthKeys, ...yearKeys, ...lifetimeKeys, ...devKeys, 
+                           ...trialKeys, ...mediaKeys];
+            
+            // Initialize database
+            allKeys.forEach(key => {
+                let type = "DAY";
+                let duration = 1;
+                
+                if (key.startsWith("3DAY")) { type = "3DAY"; duration = 3; }
+                else if (key.startsWith("WEEK")) { type = "WEEK"; duration = 7; }
+                else if (key.startsWith("MONTH")) { type = "MONTH"; duration = 30; }
+                else if (key.startsWith("3MONTH")) { type = "3MONTH"; duration = 90; }
+                else if (key.startsWith("YEAR")) { type = "YEAR"; duration = 365; }
+                else if (key.startsWith("LIFETIME")) { type = "LIFETIME"; duration = -1; }
+                else if (key.startsWith("DEV")) { type = "DEV"; duration = -1; }
+                else if (key.startsWith("TRIAL")) { type = "TRIAL"; duration = 1; }
+                else if (key.startsWith("MEDIA")) { type = "MEDIA"; duration = 7; }
+                
+                keyDatabase[key] = {
+                    key: key,
+                    type: type,
+                    duration: duration,
+                    used: false,
+                    hwid: null,
+                    createdAt: Date.now(),
+                    expiresAt: duration === -1 ? null : Date.now() + (duration * 24 * 60 * 60 * 1000)
+                };
+            });
+        }
+        
+        // Calculate time left
+        function getTimeLeft(expiresAt) {
+            if (!expiresAt) return "LIFETIME/DEV";
+            const remaining = expiresAt - Date.now();
+            if (remaining <= 0) return "EXPIRED";
+            const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+            const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+            return `${days}d ${hours}h`;
+        }
+        
+        // Render dashboard
+        function renderDashboard() {
+            const app = document.getElementById('app');
+            const usedKeys = Object.values(keyDatabase).filter(k => k.used);
+            const unusedKeys = Object.values(keyDatabase).filter(k => !k.used);
+            
+            let html = `
+                <div class="dashboard">
+                    <h1>🔑 Key System Dashboard</h1>
+                    <div class="stats">
+                        <div class="stat-box">Total Keys: ${Object.keys(keyDatabase).length}</div>
+                        <div class="stat-box">Used Keys: ${usedKeys.length}</div>
+                        <div class="stat-box">Unused Keys: ${unusedKeys.length}</div>
+                        <div class="stat-box">Active Users: ${usedKeys.filter(k => !k.expiresAt || k.expiresAt > Date.now()).length}</div>
+                    </div>
+                    
+                    <h2>✅ Used Keys</h2>
+            `;
+            
+            usedKeys.forEach(key => {
+                const timeLeft = getTimeLeft(key.expiresAt);
+                const expired = key.expiresAt && key.expiresAt <= Date.now();
+                html += `
+                    <div class="key-card" style="border-color: ${expired ? '#ff0000' : '#00ff00'}">
+                        <div class="key-header">${key.key} (${key.type})</div>
+                        <div class="key-detail">🔒 HWID Locked: ${key.hwid || 'Not locked yet'}</div>
+                        <div class="key-detail">⏱️ Time Left: ${timeLeft}</div>
+                        <div class="key-detail">📅 Created: ${new Date(key.createdAt).toLocaleString()}</div>
+                        ${key.expiresAt ? `<div class="key-detail">⏰ Expires: ${new Date(key.expiresAt).toLocaleString()}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            html += `<h2>❌ Unused Keys</h2>`;
+            unusedKeys.slice(0, 50).forEach(key => {
+                html += `
+                    <div class="key-card">
+                        <div class="key-header">${key.key} (${key.type})</div>
+                        <div class="key-detail">Status: Available</div>
+                    </div>
+                `;
+            });
+            
+            if (unusedKeys.length > 50) {
+                html += `<div class="key-card">... and ${unusedKeys.length - 50} more keys</div>`;
+            }
+            
+            html += `</div>`;
+            app.innerHTML = html;
+        }
+        
+        // Login page
+        function showLogin() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="login-box">
+                    <h1>🔐 Admin Access Required</h1>
+                    <input type="password" id="password" placeholder="Enter admin password" autofocus>
+                    <button onclick="checkPassword()">Authenticate</button>
+                    <div id="error" class="error"></div>
+                </div>
+            `;
+        }
+        
+        // Check password
+        window.checkPassword = function() {
+            const password = document.getElementById('password').value;
+            if (password === REQUIRED_PASSWORD) {
+                initializeKeys();
+                renderDashboard();
+                setInterval(() => {
+                    if (document.querySelector('.dashboard')) renderDashboard();
+                }, 10000);
+            } else {
+                document.getElementById('error').innerText = 'Invalid password! Access denied.';
+                setTimeout(() => {
+                    showLogin();
+                }, 2000);
+            }
+        };
+        
+        // Start
+        showLogin();
+    </script>
 </body>
 </html>
