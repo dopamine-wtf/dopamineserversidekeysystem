@@ -3,102 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Key Activation</title>
+    <title>key system // manual activation</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
         body {
-            background: #0a0a0a;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            padding: 20px;
+            background: #0a0e12;
+            font-family: 'Segoe UI', 'Tahoma', 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 25px;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #000000;
-            padding: 30px;
-            border-radius: 10px;
-            border: 1px solid #00ff00;
+        
+        .window {
+            max-width: 550px;
+            margin: 60px auto;
+            background: #1a1f24;
+            border: 1px solid #00BFFF;
+            border-radius: 4px;
         }
-        input, select {
+        
+        .window-header {
+            background: #0f1318;
+            padding: 12px 18px;
+            border-bottom: 1px solid #00BFFF;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #00BFFF;
+        }
+        
+        .window-content {
+            padding: 25px;
+        }
+        
+        .info-box {
+            background: #0f1318;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #8a8f99;
+            border-left: 2px solid #00BFFF;
+        }
+        
+        input {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
-            background: #000000;
-            border: 1px solid #00ff00;
-            color: #00ff00;
+            background: #0f1318;
+            border: 1px solid #2a2f35;
+            color: #c8ccd4;
             font-family: monospace;
+            font-size: 13px;
+            margin: 8px 0;
         }
+        
+        input:focus {
+            outline: none;
+            border-color: #00BFFF;
+        }
+        
         button {
-            background: #00ff00;
-            color: #000000;
+            width: 100%;
             padding: 10px;
-            border: none;
-            cursor: pointer;
+            background: #0f1318;
+            border: 1px solid #00BFFF;
+            color: #00BFFF;
             font-weight: bold;
-            font-family: monospace;
-            margin-top: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-top: 15px;
         }
+        
         button:hover {
-            background: #00cc00;
+            background: #00BFFF;
+            color: #0a0e12;
         }
-        .result {
+        
+        .result-area {
             margin-top: 20px;
-            padding: 10px;
-            background: #000000;
-            border: 1px solid #00ff00;
+            padding: 12px;
+            background: #0f1318;
+            border-left: 2px solid #2a2f35;
+            font-family: monospace;
+            font-size: 12px;
         }
-        .info {
-            background: #001100;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #00ff00;
-            font-size: 14px;
+        
+        hr {
+            border-color: #2a2f35;
+            margin: 12px 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Manual Key Activation</h1>
-        <div class="info">
-            <strong>Instructions:</strong><br>
-            1. Get User ID from the Roblox script display<br>
-            2. Get HWID from the Discord webhook when user attempts<br>
-            3. Enter key from your list<br>
-            4. Click Activate
+    <div class="window">
+        <div class="window-header">// MANUAL KEY ACTIVATION //</div>
+        <div class="window-content">
+            <div class="info-box">
+                > step 1: get user id from roblox script display<br>
+                > step 2: get hwid from discord webhook<br>
+                > step 3: enter key from your database<br>
+                > step 4: click activate
+            </div>
+            
+            <input type="password" id="adminPass" placeholder="admin password">
+            <input type="text" id="keyInput" placeholder="key (e.g., DAY_4kD92jsL0aQpZx1M)">
+            <input type="number" id="userId" placeholder="user id">
+            <input type="text" id="hwid" placeholder="hwid from discord">
+            
+            <button id="activateBtn">ACTIVATE KEY</button>
+            
+            <div id="resultArea" class="result-area">waiting for input...</div>
         </div>
-        <input type="password" id="adminPass" placeholder="Admin Password">
-        <input type="text" id="keyInput" placeholder="Key to activate (e.g., DAY_4kD92jsL0aQpZx1M)">
-        <input type="number" id="userId" placeholder="User ID (from Roblox)">
-        <input type="text" id="hwid" placeholder="HWID (from Discord webhook)">
-        <button onclick="activateKey()">Activate Key</button>
-        <div id="result" class="result"></div>
     </div>
-    
+
     <script>
-        async function activateKey() {
+        const activateBtn = document.getElementById('activateBtn');
+        const resultArea = document.getElementById('resultArea');
+        
+        activateBtn.onclick = async function() {
             const adminPass = document.getElementById('adminPass').value;
             const key = document.getElementById('keyInput').value;
             const userId = document.getElementById('userId').value;
             const hwid = document.getElementById('hwid').value;
-            const resultDiv = document.getElementById('result');
             
             if (!adminPass || !key || !userId || !hwid) {
-                resultDiv.innerHTML = "Fill in all fields";
-                resultDiv.style.color = "#ff0000";
+                resultArea.innerHTML = "[ERROR] fill all fields";
+                resultArea.style.borderLeftColor = "#ff4444";
                 return;
             }
             
             if (adminPass !== "$xen$4295") {
-                resultDiv.innerHTML = "Invalid admin password";
-                resultDiv.style.color = "#ff0000";
+                resultArea.innerHTML = "[ERROR] invalid admin password";
+                resultArea.style.borderLeftColor = "#ff4444";
                 return;
             }
             
-            resultDiv.innerHTML = "Processing...";
-            resultDiv.style.color = "#ffff00";
+            resultArea.innerHTML = "[PROCESSING] sending request...";
+            resultArea.style.borderLeftColor = "#ffaa44";
             
             try {
-                const response = await fetch('/api/validate', {
+                const response = await fetch('/validate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -112,20 +161,20 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    resultDiv.innerHTML = "Success: " + data.message;
-                    resultDiv.style.color = "#00ff00";
+                    resultArea.innerHTML = "[SUCCESS] " + data.message;
+                    resultArea.style.borderLeftColor = "#00BFFF";
                     document.getElementById('keyInput').value = '';
                     document.getElementById('userId').value = '';
                     document.getElementById('hwid').value = '';
                 } else {
-                    resultDiv.innerHTML = "Failed: " + data.message;
-                    resultDiv.style.color = "#ff0000";
+                    resultArea.innerHTML = "[FAILED] " + data.message;
+                    resultArea.style.borderLeftColor = "#ff4444";
                 }
-            } catch (error) {
-                resultDiv.innerHTML = "Error: " + error.message;
-                resultDiv.style.color = "#ff0000";
+            } catch (err) {
+                resultArea.innerHTML = "[ERROR] " + err.message;
+                resultArea.style.borderLeftColor = "#ff4444";
             }
-        }
+        };
     </script>
 </body>
 </html>
